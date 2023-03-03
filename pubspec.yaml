@@ -1,0 +1,23 @@
+name: reduced_statesrebuilder
+description: reduced for statesrebuilder.
+version: 0.1.0
+homepage:
+publish_to: none
+
+environment:
+  sdk: '>=2.18.0 <3.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  reduced:
+    git:
+      url: https://github.com/partmaster/reduced.git
+      ref: main
+  states_rebuilder: ^6.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0

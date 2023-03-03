@@ -1,0 +1,22 @@
+name: example
+description: Example app for reduced_statesrebuilder.
+publish_to: 'none' 
+version: 0.1.0+1
+
+environment:
+  sdk: '>=2.18.0 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  reduced: 
+    git:
+      url: https://github.com/partmaster/reduced.git
+      ref: main
+  reduced_statesrebuilder: 
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
