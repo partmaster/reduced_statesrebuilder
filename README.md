@@ -67,7 +67,8 @@ Widget wrapWithConsumer<S, P>({
       ),
     );
 ```
-dart```
+
+```dart
 ReactiveStatelessBuilder internalWrapWithConsumer<S, P>({
   required Store<S> store,
   required ReducedTransformer<S, P> transformer,
