@@ -55,29 +55,41 @@ Widget wrapWithProvider<S>({
 #### 4. Trigger a rebuild on widgets selectively after a state change.
 
 ```dart
-extension WrapWithConsumer<S> on Store<S> {
-  Widget wrapWithConsumer<P>({
-    required ReducedTransformer<S, P> transformer,
-    required ReducedWidgetBuilder<P> builder,
-  }) =>
-      _ReactiveStatelessBuilder(
-        builder: (_) => OnBuilder<S>(
-          listenTo: value,
-          shouldRebuild: (p0, p1) => _shouldRebuild(
-            p0.data as S,
-            p1.data as S,
-            reduce,
-            transformer,
-          ),
-          builder: () => builder(props: transformer(this)),
+Widget wrapWithConsumer<S, P>({
+  required ReducedTransformer<S, P> transformer,
+  required ReducedWidgetBuilder<P> builder,
+}) =>
+    Builder(
+      builder: (context) => internalWrapWithConsumer(
+        store: context.store<S>(),
+        transformer: transformer,
+        builder: builder,
+      ),
+    );
+```
+dart```
+ReactiveStatelessBuilder internalWrapWithConsumer<S, P>({
+  required Store<S> store,
+  required ReducedTransformer<S, P> transformer,
+  required ReducedWidgetBuilder<P> builder,
+}) =>
+    ReactiveStatelessBuilder(
+      builder: (_) => OnBuilder<S>(
+        listenTo: store.value,
+        shouldRebuild: (p0, p1) => _shouldRebuild(
+          p0.data as S,
+          p1.data as S,
+          store.reduce,
+          transformer,
         ),
-      );
-}
+        builder: () => builder(props: transformer(store)),
+      ),
+    );
 ```
 
 ```dart
-class _ReactiveStatelessBuilder extends ReactiveStatelessWidget {
-  const _ReactiveStatelessBuilder({required this.builder});
+class ReactiveStatelessBuilder extends ReactiveStatelessWidget {
+  const ReactiveStatelessBuilder({super.key, required this.builder});
 
   final WidgetBuilder builder;
 
@@ -205,12 +217,9 @@ class MyApp extends StatelessWidget {
         initialState: 0,
         child: MaterialApp(
           theme: ThemeData(primarySwatch: Colors.blue),
-          home: Builder(
-            builder: (context) =>
-                context.store<int>().wrapWithConsumer(
-                      transformer: PropsTransformer.transform,
-                      builder: MyHomePage.new,
-                    ),
+          home: wrapWithConsumer(
+            transformer: PropsTransformer.transform,
+            builder: MyHomePage.new,
           ),
         ),
       );
