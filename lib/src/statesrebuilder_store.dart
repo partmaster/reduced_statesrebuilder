@@ -1,12 +1,12 @@
-// statesrebuilder_reducible.dart
+// statesrebuilder_store.dart
 
 import 'package:flutter/widgets.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
 import 'package:reduced/reduced.dart';
 import 'inherited_widgets.dart';
 
-/// Implementation of the [Reducible] interface with injected state.
-class Store<S> extends Reducible<S> {
+/// Implementation of the [ReducedStore] interface with injected state.
+class Store<S> extends ReducedStore<S> {
   Store(S intitialValue) : value = RM.inject<S>(() => intitialValue);
 
   final Injected<S> value;

@@ -1,4 +1,4 @@
 // reduced_statesrebuilder.dart
 
-export 'src/statesrebuilder_reducible.dart';
-export 'src/statesrebuilder_wrapper.dart';
+export 'src/statesrebuilder_store.dart';
+export 'src/statesrebuilder_widgets.dart';
