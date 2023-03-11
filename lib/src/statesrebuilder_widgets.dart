@@ -43,7 +43,7 @@ class ReducedConsumer<S, P> extends ReactiveStatelessWidget {
         shouldRebuild: (p0, p1) => _shouldRebuild(
           p0.data as S,
           p1.data as S,
-          store.reduce,
+          store.dispatch,
           transformer,
         ),
         builder: () => builder(props: transformer(store)),
@@ -52,16 +52,16 @@ class ReducedConsumer<S, P> extends ReactiveStatelessWidget {
 
 P _stateToProps<S, P>(
   S state,
-  Reduce<S> reduce,
+  Dispatcher<S> dispatcher,
   ReducedTransformer<S, P> transformer,
 ) =>
-    transformer(ReducedStoreProxy(() => state, reduce, reduce));
+    transformer(ReducedStoreProxy(() => state, dispatcher, dispatcher));
 
 bool _shouldRebuild<S, P>(
   S p0,
   S p1,
-  Reduce<S> reduce,
+  Dispatcher<S> dispatcher,
   ReducedTransformer<S, P> transformer,
 ) =>
-    _stateToProps(p0, reduce, transformer) !=
-    _stateToProps(p1, reduce, transformer);
+    _stateToProps(p0, dispatcher, transformer) !=
+    _stateToProps(p1, dispatcher, transformer);

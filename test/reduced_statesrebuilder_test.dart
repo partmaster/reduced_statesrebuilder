@@ -1,16 +1,11 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:reduced/reduced.dart';
 
 import 'package:reduced_statesrebuilder/reduced_statesrebuilder.dart';
-import 'package:reduced_statesrebuilder/src/inherited_widgets.dart';
-import 'package:states_rebuilder/states_rebuilder.dart';
 
-class Incrementer extends Reducer<int> {
+class CounterIncremented extends Event<int> {
   @override
-  int call(int state) {
-    return state + 1;
-  }
+  int call(int state) => state + 1;
 }
 
 void main() {
@@ -24,9 +19,9 @@ void main() {
     expect(objectUnderTest.state, 1);
   });
 
-  test('Store reduce', () async {
+  test('Store dispatch', () async {
     final objectUnderTest = Store(0);
-    objectUnderTest.reduce(Incrementer());
+    objectUnderTest.dispatch(CounterIncremented());
     expect(objectUnderTest.state, 1);
   });
 }

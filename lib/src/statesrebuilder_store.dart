@@ -15,7 +15,7 @@ class Store<S> extends ReducedStore<S> {
   get state => value.state;
 
   @override
-  reduce(reducer) => value.state = reducer(value.state);
+  dispatch(event) => value.state = event(value.state);
 }
 
 extension ExtensionStoreOnBuildContext on BuildContext {
