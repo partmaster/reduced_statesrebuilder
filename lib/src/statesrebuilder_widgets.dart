@@ -11,15 +11,17 @@ class ReducedProvider<S> extends StatelessWidget {
   const ReducedProvider({
     super.key,
     required this.initialState,
+    this.onEventDispatched,
     required this.child,
   });
 
   final S initialState;
   final Widget child;
+  final EventListener<S>? onEventDispatched;
 
   @override
   Widget build(BuildContext context) => StatefulInheritedValueWidget(
-        converter: (rawValue) => Store(rawValue),
+        converter: (rawValue) => Store(rawValue, onEventDispatched),
         rawValue: initialState,
         child: child,
       );
@@ -55,7 +57,8 @@ P _stateToProps<S, P>(
   Dispatcher<S> dispatcher,
   ReducedTransformer<S, P> transformer,
 ) =>
-    transformer(ReducedStoreProxy(() => state, dispatcher, dispatcher));
+    transformer(
+        ReducedStoreProxy(() => state, dispatcher, dispatcher));
 
 bool _shouldRebuild<S, P>(
   S p0,

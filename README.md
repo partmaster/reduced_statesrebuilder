@@ -18,15 +18,21 @@ Implementation of the 'reduced' API for the 'statesrebuilder' state management f
 
 ```dart
 class Store<S> extends ReducedStore<S> {
-  Store(S intitialValue) : value = RM.inject<S>(() => intitialValue);
+  Store(S intitialValue, [EventListener<S>? onEventDispatched])
+      : value = RM.inject<S>(() => intitialValue),
+        _onEventDispatched = onEventDispatched;
 
   final Injected<S> value;
+  final EventListener<S>? _onEventDispatched;
 
   @override
   get state => value.state;
 
   @override
-  reduce(reducer) => value.state = reducer(value.state);
+  dispatch(event) {
+    value.state = event(value.state);
+    _onEventDispatched?.call(this, event);
+  }
 }
 ```
 
@@ -45,15 +51,17 @@ class ReducedProvider<S> extends StatelessWidget {
   const ReducedProvider({
     super.key,
     required this.initialState,
+    this.onEventDispatched,
     required this.child,
   });
 
   final S initialState;
   final Widget child;
+  final EventListener<S>? onEventDispatched;
 
   @override
   Widget build(BuildContext context) => StatefulInheritedValueWidget(
-        converter: (rawValue) => Store(rawValue),
+        converter: (rawValue) => Store(rawValue, onEventDispatched),
         rawValue: initialState,
         child: child,
       );

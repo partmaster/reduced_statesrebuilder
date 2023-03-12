@@ -1,5 +1,5 @@
 name: reduced_statesrebuilder
-version: 0.3.2
+version: 0.3.3
 description: Implementation of the state management API 'reduced' on top of the state management framework 'StatesRebuilder'.
 homepage: https://github.com/partmaster/reduced_statesrebuilder
 repository: https://github.com/partmaster/reduced_statesrebuilder.git
