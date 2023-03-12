@@ -57,8 +57,7 @@ P _stateToProps<S, P>(
   Dispatcher<S> dispatcher,
   ReducedTransformer<S, P> transformer,
 ) =>
-    transformer(
-        ReducedStoreProxy(() => state, dispatcher, dispatcher));
+    transformer(ReducedStoreProxy(() => state, dispatcher, dispatcher));
 
 bool _shouldRebuild<S, P>(
   S p0,
