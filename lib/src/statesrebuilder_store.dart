@@ -5,14 +5,9 @@ import 'package:states_rebuilder/states_rebuilder.dart';
 import 'package:reduced/reduced.dart';
 import 'inherited_widgets.dart';
 
-typedef EventListener<S> = void Function(
-  ReducedStore<S> store,
-  Event<S> event,
-);
-
-/// Implementation of the [ReducedStore] interface with injected state.
-class Store<S> extends ReducedStore<S> {
-  Store(S intitialValue, [EventListener<S>? onEventDispatched])
+/// Implementation of the [Store] interface with injected state.
+class ReducedStore<S> extends Store<S> {
+  ReducedStore(S intitialValue, [EventListener<S>? onEventDispatched])
       : value = RM.inject<S>(() => intitialValue),
         _onEventDispatched = onEventDispatched;
 
@@ -23,13 +18,13 @@ class Store<S> extends ReducedStore<S> {
   get state => value.state;
 
   @override
-  dispatch(event) {
+  process(event) {
     value.state = event(value.state);
-    _onEventDispatched?.call(this, event);
+    _onEventDispatched?.call(this, event, UniqueKey());
   }
 }
 
 extension ExtensionStoreOnBuildContext on BuildContext {
-  /// Convenience method for getting a [Store] instance.
-  Store<S> store<S>() => InheritedValueWidget.of<Store<S>>(this);
+  /// Convenience method for getting a [ReducedStore] instance.
+  ReducedStore<S> store<S>() => InheritedValueWidget.of<ReducedStore<S>>(this);
 }

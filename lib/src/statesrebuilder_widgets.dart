@@ -21,7 +21,7 @@ class ReducedProvider<S> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StatefulInheritedValueWidget(
-        converter: (rawValue) => Store(rawValue, onEventDispatched),
+        converter: (rawValue) => ReducedStore(rawValue, onEventDispatched),
         rawValue: initialState,
         child: child,
       );
@@ -30,40 +30,40 @@ class ReducedProvider<S> extends StatelessWidget {
 class ReducedConsumer<S, P> extends ReactiveStatelessWidget {
   const ReducedConsumer({
     super.key,
-    required this.transformer,
+    required this.mapper,
     required this.builder,
   });
 
-  final ReducedTransformer<S, P> transformer;
-  final ReducedWidgetBuilder<P> builder;
+  final StateToPropsMapper<S, P> mapper;
+  final WidgetFromPropsBuilder<P> builder;
 
   @override
   Widget build(BuildContext context) => _build(context.store<S>());
 
-  Widget _build(Store<S> store) => OnBuilder<S>(
+  Widget _build(ReducedStore<S> store) => OnBuilder<S>(
         listenTo: store.value,
         shouldRebuild: (p0, p1) => _shouldRebuild(
           p0.data as S,
           p1.data as S,
-          store.dispatch,
-          transformer,
+          store,
+          mapper,
         ),
-        builder: () => builder(props: transformer(store)),
+        builder: () => builder(props: mapper(store.state, store)),
       );
 }
 
 P _stateToProps<S, P>(
   S state,
-  Dispatcher<S> dispatcher,
-  ReducedTransformer<S, P> transformer,
+  EventProcessor<S> processor,
+  StateToPropsMapper<S, P> mapper,
 ) =>
-    transformer(ReducedStoreProxy(() => state, dispatcher, dispatcher));
+    mapper(state, processor);
 
 bool _shouldRebuild<S, P>(
   S p0,
   S p1,
-  Dispatcher<S> dispatcher,
-  ReducedTransformer<S, P> transformer,
+  EventProcessor<S> processor,
+  StateToPropsMapper<S, P> mapper,
 ) =>
-    _stateToProps(p0, dispatcher, transformer) !=
-    _stateToProps(p1, dispatcher, transformer);
+    _stateToProps(p0, processor, mapper) !=
+    _stateToProps(p1, processor, mapper);

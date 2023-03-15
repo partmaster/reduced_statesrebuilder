@@ -7,18 +7,18 @@
 
 Implementation of the 'reduced' API for the 'statesrebuilder' state management framework with following features:
 
-1. Implementation of the ```ReducedStore``` interface 
-2. Extension on the ```BuildContext``` for convenient access to the  ```ReducedStore``` instance.
+1. Implementation of the ```Store``` interface 
+2. Extension on the ```BuildContext``` for convenient access to the  ```Store``` instance.
 3. Register a state for management.
 4. Trigger a rebuild on widgets selectively after a state change.
 
 ## Features
 
-#### 1. Implementation of the ```ReducedStore``` interface 
+#### 1. Implementation of the ```Store``` interface 
 
 ```dart
-class Store<S> extends ReducedStore<S> {
-  Store(S intitialValue, [EventListener<S>? onEventDispatched])
+class ReducedStore<S> extends Store<S> {
+  ReducedStore(S intitialValue, [EventListener<S>? onEventDispatched])
       : value = RM.inject<S>(() => intitialValue),
         _onEventDispatched = onEventDispatched;
 
@@ -29,18 +29,18 @@ class Store<S> extends ReducedStore<S> {
   get state => value.state;
 
   @override
-  dispatch(event) {
+  process(event) {
     value.state = event(value.state);
-    _onEventDispatched?.call(this, event);
+    _onEventDispatched?.call(this, event, UniqueKey());
   }
 }
 ```
 
-#### 2. Extension on the ```BuildContext``` for convenient access to the  ```ReducedStore``` instance.
+#### 2. Extension on the ```BuildContext``` for convenient access to the  ```Store``` instance.
 
 ```dart
 extension ExtensionStoreOnBuildContext on BuildContext {
-  Store<S> store<S>() => InheritedValueWidget.of<Store<S>>(this);
+  ReducedStore<S> store<S>() => InheritedValueWidget.of<ReducedStore<S>>(this);
 }
 ```
 
@@ -61,7 +61,7 @@ class ReducedProvider<S> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StatefulInheritedValueWidget(
-        converter: (rawValue) => Store(rawValue, onEventDispatched),
+        converter: (rawValue) => ReducedStore(rawValue, onEventDispatched),
         rawValue: initialState,
         child: child,
       );
@@ -74,25 +74,25 @@ class ReducedProvider<S> extends StatelessWidget {
 class ReducedConsumer<S, P> extends ReactiveStatelessWidget {
   const ReducedConsumer({
     super.key,
-    required this.transformer,
+    required this.mapper,
     required this.builder,
   });
 
-  final ReducedTransformer<S, P> transformer;
-  final ReducedWidgetBuilder<P> builder;
+  final StateToPropsMapper<S, P> mapper;
+  final WidgetFromPropsBuilder<P> builder;
 
   @override
   Widget build(BuildContext context) => _build(context.store<S>());
 
-  Widget _build(Store<S> store) => OnBuilder<S>(
+  Widget _build(ReducedStore<S> store) => OnBuilder<S>(
         listenTo: store.value,
         shouldRebuild: (p0, p1) => _shouldRebuild(
           p0.data as S,
           p1.data as S,
-          store.reduce,
-          transformer,
+          store,
+          mapper,
         ),
-        builder: () => builder(props: transformer(store)),
+        builder: () => builder(props: mapper(store.state, store)),
       );
 }
 ```
@@ -100,21 +100,21 @@ class ReducedConsumer<S, P> extends ReactiveStatelessWidget {
 ```dart
 P _stateToProps<S, P>(
   S state,
-  Reduce<S> reduce,
-  ReducedTransformer<S, P> transformer,
+  EventProcessor<S> processor,
+  StateToPropsMapper<S, P> mapper,
 ) =>
-    transformer(ReducedStoreProxy(() => state, reduce, reduce));
+    mapper(state, processor);
 ```
 
 ```dart
 bool _shouldRebuild<S, P>(
   S p0,
   S p1,
-  Reduce<S> reduce,
-  ReducedTransformer<S, P> transformer,
+  EventProcessor<S> processor,
+  StateToPropsMapper<S, P> mapper,
 ) =>
-    _stateToProps(p0, reduce, transformer) !=
-    _stateToProps(p1, reduce, transformer);
+    _stateToProps(p0, processor, mapper) !=
+    _stateToProps(p1, processor, mapper);
 ```
 
 ## Getting started
@@ -123,8 +123,11 @@ In the pubspec.yaml add dependencies on the package 'reduced' and on the package
 
 ```
 dependencies:
-  reduced: 0.2.1
-  reduced_statesrebuilder: 0.2.1
+  reduced: 0.4.0
+  reduced_statesrebuilder: 
+    git:
+      url: https://github.com/partmaster/reduced_statesrebuilder.git
+      ref: v0.4.0
 ```
 
 Import package 'reduced' to implement the logic.
@@ -148,23 +151,26 @@ Implementation of the counter demo app logic with the 'reduced' API without furt
 
 import 'package:flutter/material.dart';
 import 'package:reduced/reduced.dart';
+import 'package:reduced/callbacks.dart';
 
-class Incrementer extends Reducer<int> {
+class CounterIncremented extends Event<int> {
   @override
   int call(int state) => state + 1;
 }
 
 class Props {
-  Props({required this.counterText, required this.onPressed});
+  const Props({required this.counterText, required this.onPressed});
+
   final String counterText;
-  final Callable<void> onPressed;
+  final VoidCallable onPressed;
 }
 
-class PropsTransformer {
-  static Props transform(ReducedStore<int> store) => Props(
-        counterText: '${store.state}',
-        onPressed: CallableAdapter(store, Incrementer()),
-      );
+class PropsMapper extends Props {
+  PropsMapper(int state, EventProcessor<int> processor)
+      : super(
+          counterText: '$state',
+          onPressed: EventCarrier(processor, CounterIncremented()),
+        );
 }
 
 class MyHomePage extends StatelessWidget {
@@ -175,7 +181,7 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
-          title: const Text('reduced_statesrebuilder example'),
+          title: const Text('reduced_setstate example'),
         ),
         body: Center(
           child: Column(
@@ -217,7 +223,7 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           theme: ThemeData(primarySwatch: Colors.blue),
           home: const ReducedConsumer(
-            transformer: PropsTransformer.transform,
+            mapper: PropsMapper.new,
             builder: MyHomePage.new,
           ),
         ),
